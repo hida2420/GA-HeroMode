@@ -15,10 +15,10 @@ class GeneticAlgorism
 		//!Destructor
 		~GeneticAlgorism();
 
-		void fitness_calc();
+		int fitness_calc();
+		void fitness_update();
 		void init_gen();
-	
-	private:
+		void main();
 
 		//個体情報 (gen, fitness) gen = (x1, ..., xn) (xiは操作情報や経過時間など)
 		typedef struct
@@ -26,6 +26,14 @@ class GeneticAlgorism
     		double fitness;//適合度
     		vector<vector<int>> gen;///fitnessの引数に当たるもの　操作情報など
 		}biont;
+
+		//比較
+		static bool compare(const biont &a, const biont &b)
+		{
+    		return a.fitness > b.fitness;
+		}
+	
+	private:
 
 		//初期状態時の個体数
 		int biont_number;
@@ -38,6 +46,14 @@ class GeneticAlgorism
 		
 		vector<biont> parents;
         vector<biont> childlen;
+
+		//適合度更新用のタイマー
+		int timer;
+
+		int current_biont;
+		int current_time;
+
+		unsigned int isJump[2];
 
 };
 
