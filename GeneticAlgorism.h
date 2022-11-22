@@ -16,7 +16,7 @@ class GeneticAlgorism
 		~GeneticAlgorism();
 
 		int fitness_calc();
-		void fitness_update();
+		void update_generation();
 		void init_gen();
 		void main();
 
@@ -54,6 +54,8 @@ class GeneticAlgorism
 		int current_time;
 
 		unsigned int isJump[2];
+		unsigned int isSquid[2];
+		unsigned int move8[8];
 
 };
 

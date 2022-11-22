@@ -47,7 +47,7 @@ GeneticAlgorism::GeneticAlgorism()
     //・どれだけゴールに近づいたか
     //の5つ
     //やりたいことは、1秒後にはこういう操作をする、2秒後にはこういうことをするっていうことを設定したい
-    gen_len = 4;
+    gen_len = 3;
 }
 
 //Destructor for the GuiButton class.
@@ -74,7 +74,6 @@ void GeneticAlgorism::init_gen()
         //↑と同じことをどんどんやっていく
         parents[i].gen[1].push_back(random(0, 7));
         parents[i].gen[2].push_back(random(0, 1));
-        parents[i].gen[3].push_back(0);
     }
 }
 
@@ -104,6 +103,12 @@ void GeneticAlgorism::main()
         //ジャンプ操作
         mem_functions.write(0, isJump[parents[current_biont].gen[0][current_time]]);
 
+        //8方向操作
+        mem_functions.write(0, move8[parents[current_biont].gen[1][current_time]]);
+
+        //イカ状態かどうか
+        mem_functions.write(0, isSquid[parents[current_biont].gen[2][current_time]]);
+
         //次の操作へ
         current_time++;
 
@@ -112,6 +117,10 @@ void GeneticAlgorism::main()
         {
             //経過時間をリセット
             current_time = 0;
+
+            //適合度を求める
+            //[仮] (目的地の3次元座標) - (プレイヤーの座標)
+            parents[current_biont].fitness = 0;
 
             //次の個体へ
             current_biont++;
@@ -132,19 +141,71 @@ void GeneticAlgorism::main()
 
 }
 
-//適合度の更新
-void GeneticAlgorism::fitness_update()
+//世代の更新
+void GeneticAlgorism::update_generation()
 {
-    //全個体分適合度の計算を行う
-    for (int i = 0; i < biont_number; i++)
-    {
-        parents[i].fitness = GeneticAlgorism::fitness_calc();
-    }
-
-    //適合度の大きい順、
-    //すなわち進んだ距離が大きい順、
-    //すなわち優れた個体順にソート
+    // 適合度の大きい順、
+    // すなわち進んだ距離が大きい順、
+    // すなわち優れた個体順にソート
     sort(parents.begin(), parents.end(), GeneticAlgorism::compare);
 
-}
+    // 交配後にランダムな値を遺伝子に追加すればよき？
+    // 交叉
+    // 優れた親を保存
+    for (int i = 0; i < parents_number; i++)
+    {
+        childlen[i].gen = parents[i].gen;
+    }
 
+
+    // 優れた親から子を生成
+    for (int cur_biont = parents_number; cur_biont < biont_number; cur_biont += 2)
+    {
+
+        // 二点交叉
+        int p_i = cur_biont - parents_number;
+
+        //子供に親の遺伝子情報をそのまま引き継ぐ
+        childlen[cur_biont].gen = parents[p_i].gen;
+        childlen[cur_biont + 1].gen = parents[p_i + 1].gen;
+
+        int left = rand() % gen_len, right = rand() % gen_len;
+        if (left > right)
+            swap(left, right);
+
+        for (int cur_gen = left; cur_gen <= right; cur_gen++)
+        {
+            childlen[cur_biont].gen[cur_gen] = parents[p_i + 1].gen[cur_gen];
+            childlen[cur_biont + 1].gen[cur_gen] = parents[p_i].gen[cur_gen];
+        }
+    }
+    // 突然変異
+    for (int i = parents_number; i < biont_number; i++)
+    {
+        for (int j = 0; j < gen_len; j++)
+        {
+            if(rand() % gen_len)
+            {
+                for(int k = 0 ; k < (int)childlen[i].gen[j].size(); i++)
+                {
+                    if(k == 1)
+                    {
+                        childlen[i].gen[j][k] = random(0, 7);
+                    }
+                    else
+                    {
+                        childlen[i].gen[j][k] = random(0, 1);
+                    }
+                    
+                }
+
+            }
+        }
+    }
+
+    // 世代交代
+    for (int i = 0; i < biont_number; i++)
+    {
+        parents[i].gen = childlen[i].gen;
+    }
+}
